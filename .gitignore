@@ -2,3 +2,6 @@ img/
 *.pyc
 *.avi
 *.mp4
+.iws
+workspace.xml
+tasks.xml
