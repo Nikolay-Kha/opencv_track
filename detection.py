@@ -29,6 +29,8 @@ hog.setSVMDetector( cv2.HOGDescriptor_getDefaultPeopleDetector() )
 frame_number = 0
 tracking_objs = []
 img_num = 0
+fps_time = time.time()
+fps = 0
 
 try:
     os.mkdir("img")
@@ -47,42 +49,32 @@ while True:
     for obj in list(tracking_objs):
         # if frame_number % 10 == 0:
         obj.ts -= 1
-        obj.update(frame)
+        try:
+            obj.update(frame)
+        except cv2.error:
+            tracking_objs.remove(obj)
+            print("Delete tracker due to the error")
+            break
         if obj.ts <= 0:
             tracking_objs.remove(obj)
-            if obj.walked_distance() > 30 and obj.mimg is not None:
-                name = datetime.datetime.now().strftime("img/%Y-%m-%d %H:%M:%S {}.jpg".format(img_num))
-                print("Delete tracker and saving " + name)
-                cv2.imwrite(name, obj.mimg)
-                img_num += 1
-            else:
-                print("Delete tracker, no movement")
-            continue
+            print("Delete tracker")
 
     # Detect people in the image
     if frame_number % 10 == 0:
-        found, w = hog.detectMultiScale(frame, winStride=(8,8), padding=(32,32), scale=1.05)
+        found, w = hog.detectMultiScale(frame, winStride=(8,8), padding=(32,32), scale=1.02)
 
         for (x, y, w, h) in found:
             intersects = False
             for obj in list(tracking_objs):
-                if obj.is_intersects(x, y, w, h):
-                    # if intersects:
-                    #     tracking_objs.remove(obj)
-                    #     print("Delete tracker which tracks the same object")
-                    #     continue
+                if obj.intersect_area(x, y, w, h) > 0.5 * obj.area():
                     intersects = True
                     obj.update_ts()
-                    if w * h > obj.mw * obj.mh:
-                        obj.mw = w
-                        obj.mh = h
-                        obj.mimg = frame[y:y + h, x:x + w].copy()
 
             if not intersects:
-                #height, width, channels = frame.shape
-                #cx = x + w / 2
-                #cy = y + h / 2
-                #if cx > width * 0.1 and cx < width * 0.9 and cy > height * 0.1 and cy < height * 0.9:
+                name = datetime.datetime.now().strftime("img/%Y-%m-%d %H:%M:%S {}.jpg".format(img_num))
+                img_num += 1
+                print("Saving " + name)
+                cv2.imwrite(name, frame[y:y + h, x:x + w])
                 tracking_obj = tracking_object.TrackingObject(frame, x, y, w, h)
                 tracking_objs.append(tracking_obj)
                 print("Create tracker: " + str(tracking_obj))
@@ -92,6 +84,11 @@ while True:
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 255, 0), 2)
     for o in tracking_objs:
         cv2.rectangle(frame, (o.x, o.y), (o.x + o.w, o.y + o.h), (0, 0, 255), 2)
+    ct = time.time()
+    fps = fps * 0.9 + (1.0 / (ct - fps_time)) * 0.1
+    fps_time = ct
+    cv2.putText(frame, "FPS is " + str(round(fps, 1)), (10, frame.shape[0] - 10),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.35, (0, 255, 0), 1)
 
     cv2.imshow("Detector", frame)
 

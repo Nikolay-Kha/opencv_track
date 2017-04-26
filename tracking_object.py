@@ -43,6 +43,21 @@ class TrackingObject:
             return False
         return True
 
+    def intersect_area(self, x, y, w, h):
+        if x + w < self.x:
+            return 0.0
+        if self.x + self.w < x:
+            return 0.0
+        if y + h < self.y:
+            return 0.0
+        if self.y + self.h < y:
+            return 0.0
+        return (min(self.x + self.w, x + w) - max(self.x, x)) * \
+               (min(self.y + self.h, y + h) - max(self.y, y))
+
+    def area(self):
+        return self.w * self.h
+
     def walked_distance(self):
         x = self.x + self.w / 2 - self.origin_center_x
         y = self.y + self.h / 2 - self.origin_center_y
