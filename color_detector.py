@@ -18,7 +18,7 @@ def detect(img):
     if len(cnts) > 0:
         c = max(cnts, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(c)
-        if y + h > height * 0.25:
+        if y + h > height * 0.5:
             return None
         return x, y, w, h
     return None

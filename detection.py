@@ -79,7 +79,7 @@ while True:
                     dx, dy, dw, dh = d
                     s = "-DETECTED"
                     cv2.rectangle(img, (dx, dy), (dx + dw, dy + dh), (0, 255, 0), 2)
-                name = datetime.datetime.now().strftime("img/%Y-%m-%d %H:%M:%S {}{}.jpg".format(img_num, s))
+                name = datetime.datetime.now().strftime("img/%Y-%m-%d_%H:%M:%S_{}{}.jpg".format(img_num, s))
                 img_num += 1
                 print("Saving " + name)
                 cv2.imwrite(name, img)
