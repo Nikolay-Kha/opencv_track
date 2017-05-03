@@ -3,10 +3,11 @@
 import argparse
 import datetime
 import imutils
+import os
 import time
 import cv2
 import tracking_object
-import os
+import color_detector
 
 # construct the argument parser and parse the arguments
 ap = argparse.ArgumentParser()
@@ -71,10 +72,17 @@ while True:
                     obj.update_ts()
 
             if not intersects:
-                name = datetime.datetime.now().strftime("img/%Y-%m-%d %H:%M:%S {}.jpg".format(img_num))
+                img = frame[y:y + h, x:x + w]
+                s = ""
+                d = color_detector.detect(img)
+                if d is not None:
+                    dx, dy, dw, dh = d
+                    s = "-DETECTED"
+                    cv2.rectangle(img, (dx, dy), (dx + dw, dy + dh), (0, 255, 0), 2)
+                name = datetime.datetime.now().strftime("img/%Y-%m-%d %H:%M:%S {}{}.jpg".format(img_num, s))
                 img_num += 1
                 print("Saving " + name)
-                cv2.imwrite(name, frame[y:y + h, x:x + w])
+                cv2.imwrite(name, img)
                 tracking_obj = tracking_object.TrackingObject(frame, x, y, w, h)
                 tracking_objs.append(tracking_obj)
                 print("Create tracker: " + str(tracking_obj))
